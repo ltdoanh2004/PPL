@@ -1,0 +1,7 @@
+HELLO=1
+ID=2
+EXCLAMATION=3
+WS=4
+ERROR_CHAR=5
+'hello'=1
+'!'=3

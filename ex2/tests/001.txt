@@ -1,0 +1,16 @@
+A123
+B
+Cabc123
+ZzZ
+H0H0H0
+D9E8f7
+AbcDEF999
+X
+Yz
+Qwe1Rty2
+aInvalid
+1StartWithNumber
+_nope
+ValidBut@Symbol
+Another One With Spaces
+LASTgoodOne

@@ -1,0 +1,9 @@
+ab123ok
+abc9maybe
+de00fail
+a123ok
+abfail123
+abc_ok
+abcFail
+abcmaybe123
+xyz456maybe
