@@ -1,0 +1,1 @@
+set the kitchen temperature to 25

@@ -1,0 +1,43 @@
+SMART HOME GRAMMAR ANALYSIS
+
+1. POTENTIAL AMBIGUITIES:
+
+The grammar may have the following ambiguities:
+
+a) Room name ambiguity: In phrases like "Turn on the living room light", it may be unclear whether "living room" is a single room name or whether "living" is modifying "room". Our grammar resolves this by defining ROOM_NAME as a capitalized word pattern, which helps distinguish it.
+
+b) Preposition usage: The same preposition could have different meanings in different contexts. For example, "to" in "Set the temperature to 24" indicates a target value, while in other contexts it might indicate direction.
+
+c) Implied objects: Commands like "Turn on the light" vs "Turn on" might be ambiguous if the device object is optional. Our grammar requires a device object to avoid this issue.
+
+d) Time format confusion: For time values, users might enter "18:00" or "6:00 PM". The grammar currently only supports 24-hour format with no AM/PM indicator.
+
+2. PARSE TREE STRUCTURE EXPLANATION:
+
+For the example "Turn on the kitchen light":
+
+The parse tree starts with a root node labeled "command". Since this is a simple command, it branches to a "simpleCommand" node, which then has three child nodes: "action", "deviceObject", and an optional "modifier" (not present in this example). The "action" node contains "Turn" as the VERB and "on" as the PREPOSITION. The "deviceObject" branches to a "lightDevice" node, which contains the tokens "the", "kitchen" (as ROOM_NAME), and "light". This hierarchical structure clearly delineates the verb phrase that describes what to do (Turn on) from the noun phrase that describes what to control (the kitchen light).
+
+3. SAMPLE INPUTS AND EXPECTED OUTPUTS:
+
+Sample Input 1: "Turn on the Kitchen light"
+- Parses as a simpleCommand
+- action: VERB="Turn" PREPOSITION="on"
+- deviceObject → lightDevice: "the" ROOM_NAME="Kitchen" "light"
+- No modifier present
+
+Sample Input 2: "Increase brightness by 10"
+- Parses as a simpleCommand
+- action: VERB="Increase" (no preposition)
+- deviceObject → brightnessDevice: "brightness"
+- modifier: "by" INT="10"
+
+Sample Input 3: "If the time is after 22:30 then turn off the Living Room light"
+- Parses as a conditionalCommand
+- condition → timeCondition: "the time is after" time="22:30"
+- simpleCommand:
+  - action: VERB="turn" PREPOSITION="off"
+  - deviceObject → lightDevice: "the" ROOM_NAME="Living Room" "light"
+  - No modifier present
+
+[Note: For the hand-drawn parse tree required in the submission, you would need to manually create this based on the structure described above for one of these examples.] 
