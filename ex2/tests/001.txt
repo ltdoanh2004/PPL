@@ -1,1 +1,1 @@
-set the kitchen temperature to 25
+If the time is after 18:00 then set the kitchen temperature to 25

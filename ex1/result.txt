@@ -1,0 +1,5 @@
+Turn on the kitchen light
+Set the temperature to 24
+Increase brightness by 10
+Play music in the living room
+If the time is after 18:00 then turn on the light
