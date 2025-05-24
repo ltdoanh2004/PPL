@@ -51,6 +51,8 @@ class Trainer:
             tokenizer=self.tokenizer
         )
         trainer.train()
+    def push_to_hub(self):
+        self.model.push_to_hub(self.model_name)
 
 def main():
     parser = argparse.ArgumentParser(description='Train a Vietnamese poem generation model')
