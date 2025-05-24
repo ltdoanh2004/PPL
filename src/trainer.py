@@ -1,10 +1,14 @@
 import torch
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
-from transformers import TrainingArguments
+from transformers import TrainingArguments, DataCollatorForLanguageModeling
 from data.dataset import PoemDataset
+from transformers import Trainer
+import argparse
+
 class Trainer:
     def __init__(self, model_name = 'NlpHUST/gpt2-vietnamese', dataset_path = 'poem_dataset.csv'):
         self.tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+        self.data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=False)
         self.model = GPT2LMHeadModel.from_pretrained(model_name)
         self.MAX_SEQ_LEN = 120
         self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -42,12 +46,22 @@ class Trainer:
             model=self.model,
             args=self.get_trainning_args(),
             train_dataset=self.tokenized_poem_dataset['train'],
-            eval_dataset=self.tokenized_poem_dataset['test']
+            eval_dataset=self.tokenized_poem_dataset['test'],
+            data_collator=self.data_collator,
+            tokenizer=self.tokenizer
         )
         trainer.train()
 
 def main():
-    trainer = Trainer()
+    parser = argparse.ArgumentParser(description='Train a Vietnamese poem generation model')
+    parser.add_argument('--model_name', type=str, default='NlpHUST/gpt2-vietnamese',
+                      help='Name or path of the pretrained model to use')
+    parser.add_argument('--dataset_path', type=str, default='poem_dataset.csv',
+                      help='Path to the poem dataset CSV file')
+    
+    args = parser.parse_args()
+    
+    trainer = Trainer(model_name=args.model_name, dataset_path=args.dataset_path)
     trainer.train_model()
 
 if __name__ == "__main__":
