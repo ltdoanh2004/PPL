@@ -14,6 +14,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 
+# Thêm fake_useragent
+try:
+    from fake_useragent import UserAgent
+    ua = UserAgent()
+except ImportError:
+    ua = None
+
 WEBDRIVER_DELAY_TIME_INT = 10
 MAX_RETRIES = 3
 RETRY_DELAY = 5
@@ -26,6 +33,20 @@ class PoemCrawler:
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        # Random User-Agent
+        if ua:
+            user_agent = ua.random
+        else:
+            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        chrome_options.add_argument(f'user-agent={user_agent}')
+        # Chặn tải ảnh, font, css
+        prefs = {"profile.managed_default_content_settings.images": 2,
+                 "profile.managed_default_content_settings.fonts": 2,
+                 "profile.managed_default_content_settings.stylesheets": 2}
+        chrome_options.add_experimental_option("prefs", prefs)
         chrome_options.headless = True
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.implicitly_wait(5)
@@ -45,17 +66,23 @@ class PoemCrawler:
             )
             return element
         except TimeoutException:
-            print(f"Timeout waiting for element: {value}")
             return None
 
     def get_category(self):
-        try:
-            category_xpath = '//header[@class="page-header"]/p/b'
-            category_elem = self.wait_for_element(By.XPATH, category_xpath)
-            return category_elem.text.strip() if category_elem else ""
-        except Exception as e:
-            print(f"Error getting category: {e}")
-            return ""
+        header_xpath = '//header[@class="page-header"]'
+        for retry in range(3):
+            try:
+                header_elem = self.driver.find_element(By.XPATH, header_xpath)
+                b_elems = header_elem.find_elements(By.TAG_NAME, 'b')
+                for b in b_elems:
+                    text = b.text.strip()
+                    if text:
+                        return text
+            except Exception:
+                pass
+            time.sleep(1)
+        print("[WARNING] Không tìm thấy category header trên trang này.")
+        return ""
 
     def process_poem(self, content_tag):
         try:
@@ -119,23 +146,32 @@ class PoemCrawler:
                 for retry in range(MAX_RETRIES):
                     try:
                         self.driver.get(url)
-                        time.sleep(random.uniform(1, 3))
-                        content_tags_xpath = '//*[@class="page-content container"]/div[2]/div/div[@class="list-item"]'
+                        time.sleep(random.uniform(2, 4))  # tăng thời gian chờ
+                        # Lưu HTML để debug nếu cần
+                        with open(f"debug_{poem_type}_{page_idx}.html", "w", encoding="utf-8") as f:
+                            f.write(self.driver.page_source)
+                        # Sửa XPATH cho chắc chắn
+                        content_tags_xpath = '//div[contains(@class, "list-item")]'
                         content_tags = self.driver.find_elements(By.XPATH, content_tags_xpath)
                         if not content_tags:
                             print(f"[WARNING] Không tìm thấy bài thơ nào với XPATH này trên {url}")
                             break
                         print(f"[DEBUG] PoemType={poem_type}, Page={page_idx}, Found {len(content_tags)} poems at {url}")
-
-                        # 1. Lưu lại thông tin cơ bản
                         poem_infos = []
                         for content_tag in content_tags:
                             try:
-                                header = content_tag.find_element(By.CLASS_NAME, "list-item-header")
+                                # Kiểm tra tồn tại header
+                                header_list = content_tag.find_elements(By.TAG_NAME, "h4")
+                                if not header_list or not header_list[0].get_attribute("class") or "list-item-header" not in header_list[0].get_attribute("class"):
+                                    continue  # Bỏ qua nếu không có header đúng
+                                header = header_list[0]
                                 a_title = header.find_element(By.TAG_NAME, "a")
                                 title = a_title.text.strip()
                                 poem_url = urljoin("https://www.thivien.net", a_title.get_attribute('href'))
-                                detail_div = content_tag.find_element(By.CLASS_NAME, "list-item-detail")
+                                detail_div_list = content_tag.find_elements(By.CLASS_NAME, "list-item-detail")
+                                if not detail_div_list:
+                                    continue
+                                detail_div = detail_div_list[0]
                                 a_tags = detail_div.find_elements(By.TAG_NAME, 'a')
                                 author = ""
                                 for a in a_tags:
@@ -147,8 +183,6 @@ class PoemCrawler:
                             except Exception as e:
                                 print(f"Error extracting poem info: {e}")
                                 continue
-
-                        # 2. Lấy nội dung chi tiết từng bài thơ
                         for info in poem_infos:
                             content = ""
                             for retry2 in range(MAX_RETRIES):
@@ -175,11 +209,9 @@ class PoemCrawler:
                         if retry == MAX_RETRIES - 1:
                             print(f"Failed to process page {url} after {MAX_RETRIES} retries: {e}")
                         time.sleep(RETRY_DELAY)
-                # Save every 10 pages
                 if page_idx % 10 == 0:
                     pd.DataFrame(self.datasets).to_csv(self.output, index=False)
                     print(f"[INFO] Saved {len(self.datasets)} poems to {self.output}")
-        # Final save
         pd.DataFrame(self.datasets).to_csv(self.output, index=False)
         print(f"[INFO] Tổng số bài thơ đã crawl: {len(self.datasets)}")
 
