@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--repetition_penalty', type=float, default=1.2,
                       help='Repetition penalty for generation')
     
-    args = parser.parse_args()
+    args = parser.parse_args()a
     
     poem_model = PoemModel(model_name=args.model_name)
     poem = poem_model.generate_poem(
