@@ -217,11 +217,11 @@ class PoemCrawler:
 
 def main():
     parser = argparse.ArgumentParser(description='Crawl all Vietnamese poem types from thivien.net')
-    parser.add_argument('--base_url', type=str, default='https://www.thivien.net/search-poem.php',
+    parser.add_argument('--base_url', type=str, default='https://www.thivien.net/search-poem.php?&Content=tình+yêu&ViewType=1&Country=2',
                         help='Base URL for crawling poems')
-    parser.add_argument('--max_poem_type', type=int, default=100,
+    parser.add_argument('--max_poem_type', type=int, default=50,
                         help='Maximum PoemType to crawl (tăng lên nếu muốn lấy nhiều hơn)')
-    parser.add_argument('--pages_per_type', type=int, default=100,
+    parser.add_argument('--pages_per_type', type=int, default=50,
                         help='Number of pages to crawl per PoemType')
     parser.add_argument('--output', type=str, default='src/data/poem_dataset.csv',
                         help='Output CSV file path')

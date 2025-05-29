@@ -1,0 +1,7 @@
+torch
+gdown
+PyYAML
+transformers
+underthesea
+numpy
+tqdm
