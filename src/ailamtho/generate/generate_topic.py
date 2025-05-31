@@ -83,8 +83,6 @@ def perturb_past(past, model, last, unpert_past=None, unpert_logits=None, accumu
     loss_per_iter = []
     new_accumulated_hidden = None
     for i in range(num_iterations):
-        if verbose:
-            print("Iteration ", i + 1)
         curr_perturbation = [
             to_var(torch.from_numpy(p_), requires_grad=True, device=device)
             for p_ in grad_accumulator
@@ -120,8 +118,7 @@ def perturb_past(past, model, last, unpert_past=None, unpert_logits=None, accumu
                 bow_loss = -torch.log(torch.sum(bow_logits))
                 loss += bow_loss
                 loss_list.append(bow_loss)
-            if verbose:
-                print(" pplm_bow_loss:", loss.data.cpu().numpy())
+
 
         kl_loss = 0.0
         if kl_scale > 0.0:
@@ -136,13 +133,11 @@ def perturb_past(past, model, last, unpert_past=None, unpert_logits=None, accumu
             kl_loss = kl_scale * (
                 (corrected_probs * (corrected_probs / unpert_probs).log()).sum()
             )
-            if verbose:
-                print(' kl_loss', kl_loss.data.cpu().numpy())
+
             loss += kl_loss
 
         loss_per_iter.append(loss.data.cpu().numpy())
-        if verbose:
-            print(' pplm_loss', (loss - kl_loss).data.cpu().numpy())
+
 
         # compute gradients
         loss.backward()
@@ -195,19 +190,15 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
                        num_iterations=3, grad_length=10000, horizon_length=1, window_length=5, decay=False,
                        gamma=1.5, gm_scale=0.9, kl_scale=0.01, verbose=False):
 
-    print("Starting generate_text_pplm...")
     output_so_far = None
 
     # Tokenize
-    print(f"Tokenizing context: {context}")
     tokens_id = tokenizer(context)['input_ids'][:-1]
-    print(f"Tokenized IDs: {tokens_id}")
     context_t = torch.tensor(tokens_id, device=device, dtype=torch.long)
 
     while len(context_t.shape) < 2:
         context_t = context_t.unsqueeze(0)
     output_so_far = context_t
-    print(f"Initial output shape: {output_so_far.shape}")
 
     grad_norms = None
     last = None
@@ -219,24 +210,18 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
     else:
         range_func = range(length)
         
-    print(f"Starting generation loop for {length} tokens...")
     for i in range_func:
-        print(f"\nGenerating token {i+1}/{length}")
         
         # Get past/probs for current output, except for last word
         if past is None and output_so_far is not None:
             last = output_so_far[:, -1:]
             if output_so_far.shape[1] > 1:
-                print("Running model forward pass...")
                 output = model(output_so_far[:, :-1], return_dict=True, output_hidden_states=True)
                 past = output.past_key_values
-                print("Forward pass completed")
 
-        print("Running model for current state...")
         output = model(output_so_far, return_dict=True, output_hidden_states=True)
         unpert_logits, unpert_past, unpert_all_hidden = output.logits, output.past_key_values, output.hidden_states
         unpert_last_hidden = unpert_all_hidden[-1]
-        print("Model forward pass completed")
 
         # check if we are abowe grad max length
         if i >= grad_length:
@@ -248,12 +233,10 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
         if not perturb or num_iterations == 0:
             pert_past = past
         else:
-            print("Computing accumulated hidden states...")
             accumulated_hidden = unpert_last_hidden[:, :-1, :]
             accumulated_hidden = torch.sum(accumulated_hidden, dim=1)
 
             if past is not None:
-                print("Perturbing past...")
                 pert_past, _, grad_norms, loss_this_iter = perturb_past(
                     past,
                     model,
@@ -278,7 +261,6 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
             else:
                 pert_past = past
 
-        print("Generating next token...")
         output = model(last, past_key_values=pert_past, return_dict=True, output_hidden_states=True)
         pert_logits, past, pert_all_hidden = output.logits, output.past_key_values, output.hidden_states
 
@@ -287,7 +269,6 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
 
         # Fuse the modified model and original model
         if perturb:
-            print("Fusing models...")
             unpert_probs = F.softmax(unpert_logits[:, -1, :], dim=-1)
 
             pert_probs = ((pert_probs ** gm_scale) * (
@@ -313,13 +294,7 @@ def generate_text_pplm(model, tokenizer, context=None, past=None, device="cuda",
             last if output_so_far is None
             else torch.cat((output_so_far, last), dim=1)
         )
-        print(f"Current output shape: {output_so_far.shape}")
-
-    print("Generation completed, decoding output...")
-    if verbose:
-        print(tokenizer.decode(output_so_far.tolist()[0]))
 
     generated_text = tokenizer.decode(output_so_far.tolist()[0])
-    print(f"Final generated text: {generated_text}")
 
     return generated_text

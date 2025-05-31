@@ -145,7 +145,6 @@ class ControlledPoemGenerator:
 
         model_state_dict.update(filtered_state_dict)
         msg = self.model.load_state_dict(model_state_dict)
-        print(msg)
         self.model.to(self.device)
         self.model.eval()
 
@@ -164,22 +163,13 @@ class ControlledPoemGenerator:
             self.one_hot_bow_vector_list.append(one_hot_bow_vector)
 
     def generate_poem(self, context, topic_id: int, max_length=30):
-        print(f"Starting poem generation with context: {context} and topic_id: {topic_id}")
         
         if topic_id not in [0, 1, 2, 3, 4]:
             raise ValueError('Topic Id must be in [0, 1, 2, 3, 4]')
             
-        print("Normalizing text...")
         norm_text = context.strip('\n ').lower()
         norm_text = word_tokenize(norm_text, format='text')
-        print(f"Normalized text: {norm_text}")
-        
-        print("Checking model and tokenizer...")
-        print(f"Model device: {self.model.device}")
-        print(f"Model type: {type(self.model)}")
-        print(f"Tokenizer type: {type(self.tokenizer)}")
-        
-        print("Starting text generation with PPLM...")
+
         try:
             # Calculate appropriate length based on desired stanzas
             target_length = max_length * 4  # 4 lines per stanza
@@ -201,19 +191,15 @@ class ControlledPoemGenerator:
                 kl_scale=0.02,
                 sample=True
             )
-            print(f"Generated text: {generated_text}")
             
             # Process the text to count actual lines
             lines = [line.strip() for line in generated_text.split('\n')]
             lines = [line for line in lines if line and not line.isspace()]
             n_stanzas = max(1, len(lines) // 4)  # Ensure at least 1 stanza
-            print(f"Number of stanzas detected: {n_stanzas}")
             
             poem = post_process(text=generated_text, n_stanzas=n_stanzas)
-            print(f"Final poem after post-processing: {poem}")
             
             if not poem.strip():
-                print("Warning: Generated poem is empty, trying with default stanza count")
                 poem = post_process(text=generated_text, n_stanzas=2)
             
             return poem
