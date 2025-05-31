@@ -1,8 +1,11 @@
 import time
-
+import os
+import sys
 import torch
 import torch.nn.functional as F
-
+# Add the src directory to Python path
+SRC_DIR = os.path.dirname(__file__)  # Go up one level from PPL to src
+sys.path.append(SRC_DIR)
 from src.ailamtho.utils import top_k_filter
 
 

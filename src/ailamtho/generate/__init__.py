@@ -4,6 +4,7 @@ from underthesea import word_tokenize
 
 from .generate_poem import generate_text
 from .generate_topic import generate_text_pplm
+
 from src.ailamtho.utils import Config, download, post_process
 from src.ailamtho.utils import get_bag_of_words_indices, build_bows_one_hot_vectors
 
