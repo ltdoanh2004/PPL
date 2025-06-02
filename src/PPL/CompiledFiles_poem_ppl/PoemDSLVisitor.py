@@ -24,5 +24,20 @@ class PoemDSLVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by PoemDSLParser#helpCommand.
+    def visitHelpCommand(self, ctx:PoemDSLParser.HelpCommandContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PoemDSLParser#listTopics.
+    def visitListTopics(self, ctx:PoemDSLParser.ListTopicsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PoemDSLParser#showModelInfo.
+    def visitShowModelInfo(self, ctx:PoemDSLParser.ShowModelInfoContext):
+        return self.visitChildren(ctx)
+
+
 
 del PoemDSLParser

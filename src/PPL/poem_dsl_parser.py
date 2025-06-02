@@ -16,6 +16,15 @@ from PoemDSLParser import PoemDSLParser
 from PoemDSLVisitor import PoemDSLVisitor
 from src.ailamtho import PoemGenerator, ControlledPoemGenerator  # Import both generators
 
+# Define topic descriptions
+TOPIC_DESCRIPTIONS = {
+    0: "Gia Đình - Những bài thơ về tình cảm gia đình, cha mẹ, con cái",
+    1: "Tình Yêu - Những bài thơ về tình yêu, tình cảm lứa đôi",
+    2: "Dịch Bệnh - Những bài thơ về đại dịch, sức khỏe, y tế",
+    3: "Quê Hương - Những bài thơ về quê hương, đất nước, quốc gia",
+    4: "Lễ Tết - Những bài thơ về ngày lễ, tết, truyền thống"
+}
+
 class PoemDSLVisitorImpl(PoemDSLVisitor):
     def __init__(self):
         self.result = None
@@ -61,6 +70,68 @@ class PoemDSLVisitorImpl(PoemDSLVisitor):
         except Exception as e:
             self.error = str(e)
 
+    def visitHelpCommand(self, ctx):
+        help_text = """
+Các lệnh có sẵn:
+
+1. Tạo thơ thông thường:
+   GENERATE POEM MODEL <model_id> CONTEXT "<text>" STANZAS <number>
+   hoặc
+   GEN POEM M <model_id> C "<text>" S <number>
+
+2. Tạo thơ có chủ đề:
+   GENERATE CONTROLLED POEM CONTEXT "<text>" TOPIC <topic_id>
+   hoặc
+   GEN CONTROLLED POEM C "<text>" T <topic_id>
+
+3. Xem danh sách chủ đề:
+   LIST TOPICS
+   hoặc
+   SHOW TOPICS
+
+4. Xem thông tin model:
+   SHOW MODEL INFO
+
+5. Xem hướng dẫn:
+   HELP
+   hoặc
+   SHOW COMMANDS
+
+Trong đó:
+- <model_id>: số nguyên >= 0
+- <text>: chuỗi ký tự tiếng Việt, có thể có dấu
+- <number>: số nguyên > 0
+- <topic_id>: số nguyên trong khoảng 0-4
+"""
+        self.result = help_text
+
+    def visitListTopics(self, ctx):
+        topics_text = "Danh sách các chủ đề có sẵn:\n\n"
+        for topic_id, description in TOPIC_DESCRIPTIONS.items():
+            topics_text += f"{topic_id}: {description}\n"
+        self.result = topics_text
+
+    def visitShowModelInfo(self, ctx):
+        model_info = """
+Thông tin về các model:
+
+1. Model thông thường (PoemGenerator):
+   - Sinh thơ dựa trên context và số khổ
+   - Không giới hạn chủ đề
+   - Có thể chọn model_id khác nhau
+
+2. Model có chủ đề (ControlledPoemGenerator):
+   - Sinh thơ theo chủ đề cụ thể
+   - 5 chủ đề có sẵn:
+     + 0: Gia Đình
+     + 1: Tình Yêu
+     + 2: Dịch Bệnh
+     + 3: Quê Hương
+     + 4: Lễ Tết
+   - Tối ưu cho từng chủ đề
+"""
+        self.result = model_info
+
 def parse_poem_command(command: str) -> tuple[bool, str]:
     """
     Parse a poem generation command and return (success, result/error_message)
@@ -93,7 +164,10 @@ if __name__ == "__main__":
         'GENERATE POEM MODEL 0 CONTEXT "ai ơi" STANZAS 2',
         'GEN POEM M 0 C "ai ơi" S 2',
         'GENERATE CONTROLLED POEM CONTEXT "cha mẹ một nắng hai sương" TOPIC 3',
-        'GEN CONTROLLED POEM C "cha mẹ một nắng hai sương" T 3'
+        'GEN CONTROLLED POEM C "cha mẹ một nắng hai sương" T 3',
+        'HELP',
+        'LIST TOPICS',
+        'SHOW MODEL INFO'
     ]
 
     for cmd in test_commands:

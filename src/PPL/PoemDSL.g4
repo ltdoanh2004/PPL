@@ -4,6 +4,9 @@ grammar PoemDSL;
 command
     : generatePoem
     | generateControlledPoem
+    | helpCommand
+    | listTopics
+    | showModelInfo
     ;
 
 generatePoem
@@ -14,6 +17,20 @@ generateControlledPoem
     : GENERATE CONTROLLED POEM CONTEXT STRING TOPIC INT
     ;
 
+helpCommand
+    : HELP
+    | SHOW COMMANDS
+    ;
+
+listTopics
+    : LIST TOPICS
+    | SHOW TOPICS
+    ;
+
+showModelInfo
+    : SHOW MODEL INFO
+    ;
+
 // Lexer Rules
 GENERATE : 'GENERATE' | 'GEN' ;
 POEM : 'POEM' ;
@@ -22,6 +39,14 @@ CONTEXT : 'CONTEXT' | 'C' ;
 STANZAS : 'STANZAS' | 'S' ;
 CONTROLLED : 'CONTROLLED' ;
 TOPIC : 'TOPIC' | 'T' ;
+
+// User interaction commands
+HELP : 'HELP' ;
+SHOW : 'SHOW' ;
+COMMANDS : 'COMMANDS' ;
+LIST : 'LIST' ;
+TOPICS : 'TOPICS' ;
+INFO : 'INFO' ;
 
 INT : [0-9]+ ;
 STRING : '"' (~["\r\n])* '"' ;

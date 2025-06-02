@@ -35,5 +35,32 @@ class PoemDSLListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by PoemDSLParser#helpCommand.
+    def enterHelpCommand(self, ctx:PoemDSLParser.HelpCommandContext):
+        pass
+
+    # Exit a parse tree produced by PoemDSLParser#helpCommand.
+    def exitHelpCommand(self, ctx:PoemDSLParser.HelpCommandContext):
+        pass
+
+
+    # Enter a parse tree produced by PoemDSLParser#listTopics.
+    def enterListTopics(self, ctx:PoemDSLParser.ListTopicsContext):
+        pass
+
+    # Exit a parse tree produced by PoemDSLParser#listTopics.
+    def exitListTopics(self, ctx:PoemDSLParser.ListTopicsContext):
+        pass
+
+
+    # Enter a parse tree produced by PoemDSLParser#showModelInfo.
+    def enterShowModelInfo(self, ctx:PoemDSLParser.ShowModelInfoContext):
+        pass
+
+    # Exit a parse tree produced by PoemDSLParser#showModelInfo.
+    def exitShowModelInfo(self, ctx:PoemDSLParser.ShowModelInfoContext):
+        pass
+
+
 
 del PoemDSLParser
